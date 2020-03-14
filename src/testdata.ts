@@ -6,7 +6,7 @@ export default {
     const data: any = []
     _.times(20, () => {
       data.push({
-        y: faker.company.companyName,
+        y: faker.company.companyName(),
         x: faker.random.number(100)
       })
     })
