@@ -1,4 +1,5 @@
 import * as _ from 'lodash'
+import testdata from './testdata'
 function component() {
   const element = document.createElement('div')
 
@@ -9,3 +10,5 @@ function component() {
 }
 
 document.body.appendChild(component())
+
+console.log(testdata.data1())
