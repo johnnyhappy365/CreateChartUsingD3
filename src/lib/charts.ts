@@ -26,6 +26,8 @@ export interface BarChartConfig {
   height?: number | 500
   data: DataItem[]
   margin?: ChartMargin
+  showMidLine?: boolean
+  onClick?: (d: DataItem) => void
 }
 
 export class BarChart {
@@ -48,19 +50,21 @@ export class BarChart {
         left: 160,
         right: 20
       },
+      showMidLine: true,
       ...config
     }
     this.init()
   }
 
   init() {
-    console.log('render')
     this.initSvg()
     this.initAxis()
     this.initGridlines()
     this.addAxis()
     this.initSeries()
-    this.initMidLine()
+    if (this.config.showMidLine) {
+      this.initMidLine()
+    }
   }
 
   protected initMidLine() {
@@ -109,7 +113,7 @@ export class BarChart {
   }
 
   protected initSeries() {
-    const { data, margin } = this.config
+    const { data, margin, onClick } = this.config
     const that = this
     this.series = this.svg
       .selectAll('.bar')
@@ -123,7 +127,11 @@ export class BarChart {
       .attr('width', (d: DataItem) => this.x(d.x) - margin.left)
       .attr('height', this.y.bandwidth())
       .style('cursor', 'pointer')
-      .on('click', (d: DataItem) => alert(`click ${d.y}`))
+      .on('click', (d: DataItem) => {
+        if (onClick) {
+          onClick(d)
+        }
+      })
       .on('mouseover.bar', function(d: DataItem, i: number) {
         that.setSeriesColor(Colors.grey)
         d3.select(this)
