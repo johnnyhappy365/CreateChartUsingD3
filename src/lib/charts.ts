@@ -3,7 +3,9 @@ import * as d3 from 'd3'
 enum Colors {
   grey = 'lightgrey',
   primary = '#42b983',
-  secondary = '#e96900'
+  secondary = '#e96900',
+  text = '#212121',
+  axis = '#757575'
 }
 
 export interface DataItem {
@@ -33,6 +35,8 @@ export class BarChart {
   y: any
   xAxis: any
   yAxis: any
+  series: any
+  seriesLabel: any
 
   constructor(config: BarChartConfig) {
     this.config = {
@@ -106,7 +110,8 @@ export class BarChart {
 
   protected initSeries() {
     const { data, margin } = this.config
-    this.svg
+    const that = this
+    this.series = this.svg
       .selectAll('.bar')
       .data(data)
       .enter()
@@ -117,6 +122,52 @@ export class BarChart {
       .attr('y', (d: DataItem) => this.y(d.y))
       .attr('width', (d: DataItem) => this.x(d.x) - margin.left)
       .attr('height', this.y.bandwidth())
+      .style('cursor', 'pointer')
+      .on('click', (d: DataItem) => alert(`click ${d.y}`))
+      .on('mouseover.bar', function(d: DataItem, i: number) {
+        that.setSeriesColor(Colors.grey)
+        d3.select(this)
+          .transition()
+          .duration(200)
+          .attr('fill', Colors.primary)
+
+        that.seriesLabel
+          .filter((d: DataItem, index: number) => index === i)
+          .transition()
+          .duration(200)
+          .attr('opacity', 0.9)
+      })
+      .on('mouseout.bar', function(d: DataItem, i: number) {
+        that.setSeriesColor(Colors.primary)
+        that.seriesLabel
+          .transition()
+          .duration(200)
+          .attr('opacity', 0)
+      })
+
+    this.seriesLabel = this.svg
+      .selectAll('.series-label')
+      .data(data)
+      .enter()
+      .append('text')
+      .classed('series-label', true)
+      .text((d: DataItem) => d.x)
+      .attr('fill', Colors.text)
+      .attr('x', (d: DataItem) => this.x(d.x) + 4) // forbiden overlay by series
+      .attr('y', (d: DataItem) => this.y(d.y) + this.y.bandwidth() / 2)
+      .attr('width', (d: DataItem) => this.x(d.x) - margin.left)
+      .attr('dominant-baseline', 'central')
+      .attr('height', this.y.bandwidth())
+      .attr('font-size', '8px')
+      .attr('font-family', 'sans-serif')
+      .attr('opacity', 0)
+  }
+
+  protected setSeriesColor(color: Colors) {
+    this.series
+      .transition()
+      .duration(200)
+      .attr('fill', color)
   }
 
   protected initAxis() {
@@ -140,14 +191,23 @@ export class BarChart {
 
   private addAxis() {
     const { height, margin } = this.config
-    this.svg
+    this.xAxis = this.svg
       .append('g')
       .attr('transform', `translate(0, ${height - margin.bottom})`)
       .call(this.xAxis)
-    this.svg
+
+    this.xAxis.selectAll('text').attr('fill', Colors.axis)
+    this.xAxis.selectAll('path').attr('stroke', Colors.axis)
+    this.xAxis.selectAll('line').attr('stroke', Colors.axis)
+
+    this.yAxis = this.svg
       .append('g')
       .attr('transform', `translate(${margin.left}, 0)`)
       .call(this.yAxis)
+
+    this.yAxis.selectAll('text').attr('fill', Colors.axis)
+    this.yAxis.selectAll('path').attr('stroke', Colors.axis)
+    this.yAxis.selectAll('line').attr('stroke', Colors.axis)
   }
 
   protected initSvg() {
