@@ -132,8 +132,38 @@ export class LineChart extends BaseChart {
     this.initAxis()
     this.addAxis()
     this.initYGridlines(5)
+    this.initBrush()
     this.initSeries()
     this.initTooltip()
+  }
+
+  protected initBrush() {
+    const that = this
+    const { margin, width, height } = this.config
+    const brushX = d3.brushX().extent([
+      [margin.left, margin.top],
+      [width - margin.right, height - margin.bottom]
+    ])
+    brushX
+      // .on('start') // brush start event
+      .on('brush', function() {
+        const ext: any[] = d3.brushSelection(this)
+        console.log(
+          'brushing',
+          ext.map((e: any) => that.x.invert(e))
+        )
+      })
+      .on('end', function() {
+        const ext: any[] = d3.brushSelection(this)
+        console.log(
+          'brush end',
+          ext.map((e: any) => that.x.invert(e))
+        )
+      })
+    this.svg
+      .append('g')
+      .attr('class', 'brush')
+      .call(brushX)
   }
 
   initSeries() {
