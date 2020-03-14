@@ -2,7 +2,8 @@ import * as d3 from 'd3'
 
 enum Colors {
   grey = 'lightgrey',
-  primary = '#42b983'
+  primary = '#42b983',
+  secondary = '#e96900'
 }
 
 export interface DataItem {
@@ -55,6 +56,35 @@ export class BarChart {
     this.initGridlines()
     this.addAxis()
     this.initSeries()
+    this.initMidLine()
+  }
+
+  protected initMidLine() {
+    const { data, margin, height } = this.config
+    const midValue = d3.median(data.map((d: DataItem) => d.x as number))
+
+    this.svg
+      .append('line')
+      .classed('mid', true)
+      .attr('stroke', Colors.secondary)
+      .attr('stroke-width', 2)
+      .attr('x1', this.x(midValue))
+      .attr('x2', this.x(midValue))
+      .attr('y1', margin.top)
+      .attr('y2', height - margin.bottom)
+
+    // add text
+    this.svg
+      .append('text')
+      .classed('mid-text', true)
+      .attr('x', this.x(midValue) + 2)
+      .attr('y', margin.top)
+      .attr('width', 20)
+      .attr('height', 10)
+      .attr('font-size', '10px')
+      .attr('font-family', 'sans-serif')
+      .style('fill', Colors.secondary)
+      .text(`mid: ${midValue}`)
   }
 
   protected initGridlines() {
