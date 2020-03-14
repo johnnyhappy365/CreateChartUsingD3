@@ -69,6 +69,44 @@ class BaseChart {
       .style('left', '0')
     // .style('background-color', Colors.grey)
   }
+
+  protected initGridlines() {
+    this.initXGridlines()
+  }
+
+  protected initXGridlines(ticks = 5) {
+    const { height, margin } = this.config
+    const gridX = d3
+      .axisBottom(this.x)
+      .ticks((ticks = ticks))
+      .tickSize(-height + margin.top + margin.bottom)
+      .tickFormat(() => '')
+    this.svg
+      .append('g')
+      .call(gridX)
+      .classed('grid', true)
+      .attr('color', Colors.grey)
+      .attr('stroke-width', 0.1)
+      .attr('stroke-dasharray', '3,3')
+      .attr('transform', `translate(0, ${height - margin.bottom})`)
+  }
+
+  protected initYGridlines(ticks = 5) {
+    const { width, margin } = this.config
+    const gridY = d3
+      .axisLeft(this.y)
+      .ticks(ticks)
+      .tickSize(-width + margin.left + margin.left)
+      .tickFormat(() => '')
+    this.svg
+      .append('g')
+      .call(gridY)
+      .classed('grid', true)
+      .attr('color', Colors.grey)
+      .attr('stroke-width', 0.1)
+      .attr('stroke-dasharray', '3,3')
+      .attr('transform', `translate(${margin.left}, ${margin.top})`)
+  }
 }
 
 export class LineChart extends BaseChart {
@@ -93,6 +131,7 @@ export class LineChart extends BaseChart {
     this.initSvg()
     this.initAxis()
     this.addAxis()
+    this.initYGridlines(5)
     this.initSeries()
     this.initTooltip()
   }
@@ -273,23 +312,6 @@ export class BarChart extends BaseChart {
       .attr('font-family', 'sans-serif')
       .style('fill', Colors.secondary)
       .text(`mid: ${midValue}`)
-  }
-
-  protected initGridlines() {
-    const { height, margin } = this.config
-    const gridX = d3
-      .axisBottom(this.x)
-      .ticks(5)
-      .tickSize(-height + margin.top + margin.bottom)
-      .tickFormat(() => '')
-    this.svg
-      .append('g')
-      .call(gridX)
-      .classed('grid', true)
-      .attr('color', Colors.grey)
-      .attr('stroke-width', 0.1)
-      .attr('stroke-dasharray', '3,3')
-      .attr('transform', `translate(0, ${height - margin.bottom})`)
   }
 
   protected initSeries() {
