@@ -1,7 +1,7 @@
 import * as d3 from 'd3'
 
 enum Colors {
-  grey = '#eee',
+  grey = 'lightgrey',
   primary = '#42b983'
 }
 
@@ -52,7 +52,26 @@ export class BarChart {
     console.log('render')
     this.initSvg()
     this.initAxis()
+    this.initGridlines()
+    this.addAxis()
     this.initSeries()
+  }
+
+  protected initGridlines() {
+    const { height, margin } = this.config
+    const gridX = d3
+      .axisBottom(this.x)
+      .ticks(5)
+      .tickSize(-height + margin.top + margin.bottom)
+      .tickFormat(() => '')
+    this.svg
+      .append('g')
+      .call(gridX)
+      .classed('grid', true)
+      .attr('color', Colors.grey)
+      .attr('stroke-width', 0.1)
+      .attr('stroke-dasharray', '3,3')
+      .attr('transform', `translate(0, ${height - margin.bottom})`)
   }
 
   protected initSeries() {
@@ -64,7 +83,7 @@ export class BarChart {
       .append('rect')
       .classed('bar', true)
       .attr('fill', Colors.primary)
-      .attr('x', margin.left)
+      .attr('x', margin.left + 1) // forbiden overlay by series
       .attr('y', (d: DataItem) => this.y(d.y))
       .attr('width', (d: DataItem) => this.x(d.x) - margin.left)
       .attr('height', this.y.bandwidth())
@@ -79,10 +98,6 @@ export class BarChart {
       .range([margin.left, width - margin.right])
 
     this.xAxis = d3.axisBottom(this.x)
-    this.svg
-      .append('g')
-      .attr('transform', `translate(0, ${height - margin.bottom})`)
-      .call(this.xAxis)
 
     this.y = d3
       .scaleBand()
@@ -91,6 +106,14 @@ export class BarChart {
       .padding(0.3)
 
     this.yAxis = d3.axisLeft(this.y)
+  }
+
+  private addAxis() {
+    const { height, margin } = this.config
+    this.svg
+      .append('g')
+      .attr('transform', `translate(0, ${height - margin.bottom})`)
+      .call(this.xAxis)
     this.svg
       .append('g')
       .attr('transform', `translate(${margin.left}, 0)`)
