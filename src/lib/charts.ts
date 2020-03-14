@@ -44,6 +44,7 @@ class BaseChart {
   yAxis: any
   series: any
   seriesLabel: any
+  tooltip: any
 
   protected initSvg() {
     const { selector, width, height } = this.config
@@ -92,6 +93,85 @@ export class LineChart extends BaseChart {
     this.initSvg()
     this.initAxis()
     this.addAxis()
+    this.initSeries()
+    this.initTooltip()
+  }
+
+  initSeries() {
+    const { data } = this.config
+    const that = this
+
+    const line = d3
+      .line()
+      .x((d: any, i: number) => that.x(d.x))
+      .y((d: any, i: number) => that.y(d.y))
+      .curve(d3.curveMonotoneX)
+
+    this.series = this.svg
+      .append('path')
+      .datum(data) // 10. Binds data to the line
+      .attr('class', 'line') // Assign a class for styling
+      .attr('d', line)
+      .attr('fill', 'none')
+      .attr('stroke', Colors.primary)
+      .attr('stroke-width', 3)
+
+    const dot = this.svg
+      .selectAll('.dot')
+      .data(data)
+      .enter()
+      .append('circle') // Uses the enter().append() method
+      .attr('class', 'dot') // Assign a class for styling
+      .attr('cx', function(d: any) {
+        return that.x(moment(d.x).toDate())
+      })
+      .attr('cy', function(d: any) {
+        return that.y(d.y)
+      })
+      .attr('r', 5)
+      .attr('fill', Colors.primary)
+      .attr('stroke', '#fff')
+      .style('cursor', 'pointer')
+      .attr('stroke-width', 2)
+      .on('mouseover', function(d: DataItem, i: number) {
+        console.log('y', that.y(d.y))
+        that.tooltip
+          .transition()
+          .duration(20)
+          .style('opacity', 0.9)
+
+        let left = d3.event.pageX + 20
+        if (i > data.length / 2) {
+          left = d3.event.pageX - 120
+        }
+
+        const maxDomainValue = d3.max(data, (d: DataItem) => d.y as number)
+        let top = d3.event.pageY - 60
+        if (d.y > maxDomainValue * 0.66) {
+          top = d3.event.pageY + 20
+        }
+        that.tooltip
+          .html(moment(d.x).format('YYYY-MM-DD') + '<br />' + d.y)
+          .style('left', left + 'px')
+          .style('top', top + 'px')
+          .style('z-index', 1)
+      })
+      .on('mouseout', function(d: DataItem, i: number) {
+        that.tooltip.style('opacity', 0).style('z-index', -1)
+      })
+  }
+
+  protected initTooltip() {
+    const { selector } = this.config
+    this.tooltip = d3
+      .select(selector)
+      .append('div')
+      .classed('tooltip', true)
+      .style('opacity', 0)
+      .style('position', 'absolute')
+      .style('background', 'white')
+      .style('padding', '8px')
+      .style('border', `2px solid ${Colors.primary}`)
   }
 
   protected initAxis() {
