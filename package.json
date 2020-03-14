@@ -29,9 +29,11 @@
     "webpack-cli": "^3.3.11"
   },
   "dependencies": {
+    "@types/moment": "^2.13.0",
     "d3": "^5.15.0",
     "faker": "^4.1.0",
     "lodash": "^4.17.15",
+    "moment": "^2.24.0",
     "webpack-dev-server": "^3.10.3"
   }
 }

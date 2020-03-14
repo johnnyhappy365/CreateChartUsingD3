@@ -1,4 +1,5 @@
 import * as d3 from 'd3'
+import moment from 'moment'
 
 enum Colors {
   grey = 'lightgrey',
@@ -9,7 +10,7 @@ enum Colors {
 }
 
 export interface DataItem {
-  x: string | number
+  x: string | number | Date
   y: string | number
 }
 
@@ -20,18 +21,22 @@ export interface ChartMargin {
   bottom: number
 }
 
-export interface BarChartConfig {
+export interface IChartConfig {
   selector: string
   width?: number | 300
   height?: number | 500
   data: DataItem[]
   margin?: ChartMargin
-  showMidLine?: boolean
   onClick?: (d: DataItem) => void
 }
 
-export class BarChart {
-  config: BarChartConfig
+export interface BarChartConfig extends IChartConfig {
+  showMidLine?: boolean
+}
+export interface LineChartConfig extends IChartConfig {}
+
+class BaseChart {
+  protected config: BarChartConfig
   svg: any
   x: any
   y: any
@@ -40,7 +45,102 @@ export class BarChart {
   series: any
   seriesLabel: any
 
+  protected initSvg() {
+    const { selector, width, height } = this.config
+
+    this.svg = d3
+      .select(selector)
+      .append('div')
+      .classed('chart-wrapper', true)
+      .style('display', 'inline-block')
+      .style('position', 'relative')
+      .style('width', '100%')
+      .style('padding-bottom', '100%')
+      .style('vertical-align', 'top')
+      .style('overflow', 'hidden')
+      // Container class to make it responsive.
+      .append('svg')
+      .attr('preserveAspectRatio', 'xMinYMin meet')
+      .attr('viewBox', `0 0 ${width} ${height}`)
+      .style('display', 'inline-block')
+      .style('position', 'absolute')
+      .style('top', '0')
+      .style('left', '0')
+    // .style('background-color', Colors.grey)
+  }
+}
+
+export class LineChart extends BaseChart {
+  constructor(config: LineChartConfig) {
+    super()
+    this.config = {
+      width: 500,
+      height: 300,
+      margin: {
+        bottom: 20,
+        top: 20,
+        left: 20,
+        right: 20
+      },
+      showMidLine: true,
+      ...config
+    }
+    this.init()
+  }
+
+  init() {
+    this.initSvg()
+    this.initAxis()
+    this.addAxis()
+  }
+
+  protected initAxis() {
+    const { data, width, height, margin } = this.config
+    const maxDomainValue = d3.max(data, (d: DataItem) => d.y as number)
+    this.x = d3
+      .scaleTime()
+      .domain([data[0].x as Date, data[data.length - 1].x as Date])
+      .range([margin.left, width - margin.right])
+
+    this.xAxis = d3
+      .axisBottom(this.x)
+      // @ts-ignore
+      .tickFormat((d: DataItem) => moment(d).format('M-D'))
+      .ticks(d3.timeDay.every(2))
+
+    this.y = d3
+      .scaleLinear()
+      .domain([0, maxDomainValue])
+      .range([height - margin.bottom, margin.top])
+    this.yAxis = d3.axisLeft(this.y)
+  }
+
+  // TODO: double check wether duplicate
+  private addAxis() {
+    const { height, margin } = this.config
+    this.xAxis = this.svg
+      .append('g')
+      .attr('transform', `translate(0, ${height - margin.bottom})`)
+      .call(this.xAxis)
+
+    this.xAxis.selectAll('text').attr('fill', Colors.axis)
+    this.xAxis.selectAll('path').attr('stroke', Colors.axis)
+    this.xAxis.selectAll('line').attr('stroke', Colors.axis)
+
+    this.yAxis = this.svg
+      .append('g')
+      .attr('transform', `translate(${margin.left}, 0)`)
+      .call(this.yAxis)
+
+    this.yAxis.selectAll('text').attr('fill', Colors.axis)
+    this.yAxis.selectAll('path').attr('stroke', Colors.axis)
+    this.yAxis.selectAll('line').attr('stroke', Colors.axis)
+  }
+}
+
+export class BarChart extends BaseChart {
   constructor(config: BarChartConfig) {
+    super()
     this.config = {
       width: 500,
       height: 300,
@@ -216,29 +316,5 @@ export class BarChart {
     this.yAxis.selectAll('text').attr('fill', Colors.axis)
     this.yAxis.selectAll('path').attr('stroke', Colors.axis)
     this.yAxis.selectAll('line').attr('stroke', Colors.axis)
-  }
-
-  protected initSvg() {
-    const { selector, width, height } = this.config
-
-    this.svg = d3
-      .select(selector)
-      .append('div')
-      .classed('chart-wrapper', true)
-      .style('display', 'inline-block')
-      .style('position', 'relative')
-      .style('width', '100%')
-      .style('padding-bottom', '100%')
-      .style('vertical-align', 'top')
-      .style('overflow', 'hidden')
-      // Container class to make it responsive.
-      .append('svg')
-      .attr('preserveAspectRatio', 'xMinYMin meet')
-      .attr('viewBox', `0 0 ${width} ${height}`)
-      .style('display', 'inline-block')
-      .style('position', 'absolute')
-      .style('top', '0')
-      .style('left', '0')
-    // .style('background-color', Colors.grey)
   }
 }

@@ -1,6 +1,6 @@
-import * as _ from 'lodash'
+import _ from 'lodash'
 import testdata from './testdata'
-import { BarChart } from './lib/charts'
+import { BarChart, LineChart } from './lib/charts'
 
 new BarChart({
   selector: '#chart-1',
@@ -13,4 +13,9 @@ new BarChart({
     right: 20
   },
   onClick: d => {}
+})
+
+new LineChart({
+  selector: '#chart-2',
+  data: testdata.data2()
 })
