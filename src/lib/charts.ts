@@ -1,7 +1,8 @@
 import * as d3 from 'd3'
 
 enum Colors {
-  grey = '#eee'
+  grey = '#eee',
+  primary = '#42b983'
 }
 
 export interface DataItem {
@@ -51,6 +52,22 @@ export class BarChart {
     console.log('render')
     this.initSvg()
     this.initAxis()
+    this.initSeries()
+  }
+
+  protected initSeries() {
+    const { data, margin } = this.config
+    this.svg
+      .selectAll('.bar')
+      .data(data)
+      .enter()
+      .append('rect')
+      .classed('bar', true)
+      .attr('fill', Colors.primary)
+      .attr('x', margin.left)
+      .attr('y', (d: DataItem) => this.y(d.y))
+      .attr('width', (d: DataItem) => this.x(d.x) - margin.left)
+      .attr('height', this.y.bandwidth())
   }
 
   protected initAxis() {
@@ -59,23 +76,24 @@ export class BarChart {
     this.x = d3
       .scaleLinear()
       .domain([0, maxDomainValue])
-      .range([0, width - margin.right - margin.left])
+      .range([margin.left, width - margin.right])
 
     this.xAxis = d3.axisBottom(this.x)
     this.svg
       .append('g')
-      .attr('transform', `translate(${margin.left}, ${height - margin.bottom})`)
+      .attr('transform', `translate(0, ${height - margin.bottom})`)
       .call(this.xAxis)
 
     this.y = d3
       .scaleBand()
       .domain(data.map((d: DataItem) => d.y) as string[])
-      .range([margin.top, height - margin.top - margin.bottom])
+      .range([margin.top, height - margin.bottom])
+      .padding(0.3)
 
     this.yAxis = d3.axisLeft(this.y)
     this.svg
       .append('g')
-      .attr('transform', `translate(${margin.left}, ${margin.top})`)
+      .attr('transform', `translate(${margin.left}, 0)`)
       .call(this.yAxis)
   }
 
