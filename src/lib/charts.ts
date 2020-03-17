@@ -132,6 +132,47 @@ export class ScatterChart extends BaseChart {
     this.initAxis()
     this.addAxis()
     this.initSeries()
+    this.initBrush()
+  }
+
+  protected initBrush() {
+    const that = this
+    const { margin, width, height, data } = this.config
+    const brush = d3.brush().extent([
+      [margin.left, margin.top],
+      [width - margin.right, height - margin.bottom]
+    ])
+    brush
+      // .on('start') // brush start event
+      .on('brush', function() {
+        // const ext: any[] = d3.brushSelection(this)
+        // console.log(
+        //   'brushing',
+        //   ext.map((e: any) => that.x.invert(e))
+        // )
+      })
+      .on('end', function() {
+        const ext: any[] = d3.brushSelection(this)
+        // console.log('ext', ext)
+        let [[x1, y1], [x2, y2]] = ext
+        x1 = that.x.invert(x1)
+        x2 = that.x.invert(x2)
+        y1 = that.y.invert(y1)
+        y2 = that.y.invert(y2)
+        console.log(x1, y1, x2, y2)
+        const filtered = data.filter((d: DataItem) => {
+          return x1 <= d.x && d.x <= x2 && y2 <= d.y && d.y <= y1
+        })
+        console.log('filtered points', filtered.length)
+        // console.log(
+        //   'brush end',
+        //   ext.map((e: any) => that.x.invert(e))
+        // )
+      })
+    this.svg
+      .append('g')
+      .attr('class', 'brush')
+      .call(brush)
   }
 
   protected initSeries() {
@@ -150,15 +191,17 @@ export class ScatterChart extends BaseChart {
 
   protected initAxis() {
     const { data, width, height, margin } = this.config
+    const xExtent = d3.extent(data.map((d: DataItem) => d.x as number))
+    const yExtent = d3.extent(data.map((d: DataItem) => d.y as number))
     this.x = d3
       .scaleLinear()
-      .domain(d3.extent(data.map((d: DataItem) => d.x as number)))
+      .domain([xExtent[0] - xExtent[1] * 0.05, xExtent[1] * 1.05])
       .range([margin.left, width - margin.right])
     this.xAxis = d3.axisBottom(this.x)
 
     this.y = d3
       .scaleLinear()
-      .domain(d3.extent(data.map((d: DataItem) => d.y as number)))
+      .domain([yExtent[0] - yExtent[1] * 0.05, yExtent[1] * 1.05])
       .range([height - margin.bottom, margin.top])
     this.yAxis = d3.axisLeft(this.y)
   }
