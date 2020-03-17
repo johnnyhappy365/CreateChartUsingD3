@@ -24,5 +24,15 @@ export default {
       })
     }
     return data
+  },
+  data3: () => {
+    const data: any = []
+    for (let index = 0; index < 500; index++) {
+      data.push({
+        x: Math.round(_.random(1000)),
+        y: Math.round(_.random(1000))
+      })
+    }
+    return data
   }
 }

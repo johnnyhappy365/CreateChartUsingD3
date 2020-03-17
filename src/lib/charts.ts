@@ -109,6 +109,68 @@ class BaseChart {
   }
 }
 
+export class ScatterChart extends BaseChart {
+  constructor(config: LineChartConfig) {
+    super()
+    this.config = {
+      width: 500,
+      height: 300,
+      margin: {
+        bottom: 20,
+        top: 30,
+        left: 40,
+        right: 20
+      },
+      showMidLine: true,
+      ...config
+    }
+    this.init()
+  }
+
+  init() {
+    this.initSvg()
+    this.initAxis()
+    this.addAxis()
+  }
+
+  protected initAxis() {
+    const { data, width, height, margin } = this.config
+    this.x = d3
+      .scaleLinear()
+      .domain(d3.extent(data.map((d: DataItem) => d.x as number)))
+      .range([margin.left, width - margin.right])
+    this.xAxis = d3.axisBottom(this.x)
+
+    this.y = d3
+      .scaleLinear()
+      .domain(d3.extent(data.map((d: DataItem) => d.y as number)))
+      .range([height - margin.bottom, margin.top])
+    this.yAxis = d3.axisLeft(this.y)
+  }
+
+  // TODO: double check wether duplicate
+  private addAxis() {
+    const { height, margin } = this.config
+    this.xAxis = this.svg
+      .append('g')
+      .attr('transform', `translate(0, ${height - margin.bottom})`)
+      .call(this.xAxis)
+
+    this.xAxis.selectAll('text').attr('fill', Colors.axis)
+    this.xAxis.selectAll('path').attr('stroke', Colors.axis)
+    this.xAxis.selectAll('line').attr('stroke', Colors.axis)
+
+    this.yAxis = this.svg
+      .append('g')
+      .attr('transform', `translate(${margin.left}, 0)`)
+      .call(this.yAxis)
+
+    this.yAxis.selectAll('text').attr('fill', Colors.axis)
+    this.yAxis.selectAll('path').attr('stroke', Colors.axis)
+    this.yAxis.selectAll('line').attr('stroke', Colors.axis)
+  }
+}
+
 export class LineChart extends BaseChart {
   constructor(config: LineChartConfig) {
     super()
