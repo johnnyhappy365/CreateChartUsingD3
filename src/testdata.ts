@@ -27,10 +27,22 @@ export default {
   },
   data3: () => {
     const data: any = []
-    for (let index = 0; index < 500; index++) {
+    for (let index = 0; index < 50; index++) {
       data.push({
-        x: Math.round(_.random(1000)),
-        y: Math.round(_.random(1000))
+        x: index + Math.round(_.random(10)),
+        y: index + Math.round(_.random(10))
+      })
+    }
+    for (let index = 0; index < 10; index++) {
+      data.push({
+        x: 5 + Math.round(_.random(10)),
+        y: 35 + Math.round(_.random(20))
+      })
+    }
+    for (let index = 0; index < 20; index++) {
+      data.push({
+        x: 35 + Math.round(_.random(10)),
+        y: 5 + Math.round(_.random(20))
       })
     }
     return data

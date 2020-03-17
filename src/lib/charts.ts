@@ -131,6 +131,21 @@ export class ScatterChart extends BaseChart {
     this.initSvg()
     this.initAxis()
     this.addAxis()
+    this.initSeries()
+  }
+
+  protected initSeries() {
+    const { data } = this.config
+    this.svg
+      .selectAll('circle')
+      .data(data)
+      .enter()
+      .append('circle')
+      .style('fill', Colors.primary)
+      .style('opacity', 0.9)
+      .attr('r', 3)
+      .attr('cx', (d: DataItem) => this.x(d.x))
+      .attr('cy', (d: DataItem) => this.y(d.y))
   }
 
   protected initAxis() {
