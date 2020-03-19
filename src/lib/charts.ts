@@ -34,6 +34,8 @@ export interface BarChartConfig extends IChartConfig {
   showMidLine?: boolean
 }
 export interface LineChartConfig extends IChartConfig {}
+export interface ScatterChartConfig extends IChartConfig {}
+export interface ColumnChartConfig extends IChartConfig {}
 
 class BaseChart {
   protected config: BarChartConfig
@@ -110,7 +112,7 @@ class BaseChart {
 }
 
 export class ScatterChart extends BaseChart {
-  constructor(config: LineChartConfig) {
+  constructor(config: ScatterChartConfig) {
     super()
     this.config = {
       width: 500,
@@ -361,6 +363,111 @@ export class LineChart extends BaseChart {
       .style('background', 'white')
       .style('padding', '8px')
       .style('border', `2px solid ${Colors.primary}`)
+  }
+
+  protected initAxis() {
+    const { data, width, height, margin } = this.config
+    const maxDomainValue = d3.max(data, (d: DataItem) => d.y as number)
+    this.x = d3
+      .scaleTime()
+      .domain([data[0].x as Date, data[data.length - 1].x as Date])
+      .range([margin.left, width - margin.right])
+
+    this.xAxis = d3
+      .axisBottom(this.x)
+      // @ts-ignore
+      .tickFormat((d: DataItem) => moment(d).format('M-D'))
+      .ticks(d3.timeDay.every(2))
+
+    this.y = d3
+      .scaleLinear()
+      .domain([0, maxDomainValue])
+      .range([height - margin.bottom, margin.top])
+    this.yAxis = d3.axisLeft(this.y)
+  }
+
+  // TODO: double check wether duplicate
+  private addAxis() {
+    const { height, margin } = this.config
+    this.xAxis = this.svg
+      .append('g')
+      .attr('transform', `translate(0, ${height - margin.bottom})`)
+      .call(this.xAxis)
+
+    this.xAxis.selectAll('text').attr('fill', Colors.axis)
+    this.xAxis.selectAll('path').attr('stroke', Colors.axis)
+    this.xAxis.selectAll('line').attr('stroke', Colors.axis)
+
+    this.yAxis = this.svg
+      .append('g')
+      .attr('transform', `translate(${margin.left}, 0)`)
+      .call(this.yAxis)
+
+    this.yAxis.selectAll('text').attr('fill', Colors.axis)
+    this.yAxis.selectAll('path').attr('stroke', Colors.axis)
+    this.yAxis.selectAll('line').attr('stroke', Colors.axis)
+  }
+}
+
+export class ColumnChart extends BaseChart {
+  constructor(config: ColumnChartConfig) {
+    super()
+    this.config = {
+      width: 500,
+      height: 300,
+      margin: {
+        bottom: 20,
+        top: 20,
+        left: 20,
+        right: 20
+      },
+      showMidLine: true,
+      ...config
+    }
+    this.init()
+  }
+  init() {
+    this.initSvg()
+    this.initAxis()
+    this.addAxis()
+    this.initSeries()
+  }
+
+  protected setSeriesColor(color: Colors) {
+    this.series
+      .transition()
+      .duration(200)
+      .attr('fill', color)
+  }
+
+  protected initSeries() {
+    const { data, margin, height, width } = this.config
+    const that = this
+    const padding: number = 0.3
+    const bandwidth: number =
+      ((width - margin.left - margin.right) / data.length) * (1 - padding)
+    this.series = this.svg
+      .selectAll('.bar')
+      .data(data)
+      .enter()
+      .append('rect')
+      .classed('bar', true)
+      .attr('fill', Colors.primary)
+      .attr('x', (d: DataItem) => this.x(d.x)) // forbiden overlay by series
+      .attr('y', (d: DataItem) => height - this.y(d.y))
+      .attr('width', bandwidth)
+      .attr('height', (d: DataItem) => this.y(d.y) - margin.top)
+      .style('cursor', 'pointer')
+      .on('mouseover.bar', function(d: DataItem, i: number) {
+        that.setSeriesColor(Colors.grey)
+        d3.select(this)
+          .transition()
+          .duration(200)
+          .attr('fill', Colors.primary)
+      })
+      .on('mouseout.bar', function(d: DataItem, i: number) {
+        that.setSeriesColor(Colors.primary)
+      })
   }
 
   protected initAxis() {

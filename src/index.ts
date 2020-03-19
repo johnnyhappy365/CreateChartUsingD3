@@ -1,6 +1,6 @@
 import _ from 'lodash'
 import testdata from './testdata'
-import { BarChart, LineChart, ScatterChart } from './lib/charts'
+import { BarChart, LineChart, ScatterChart, ColumnChart } from './lib/charts'
 
 new BarChart({
   selector: '#chart-1',
@@ -23,4 +23,9 @@ new LineChart({
 new ScatterChart({
   selector: '#chart-3',
   data: testdata.data3()
+})
+
+new ColumnChart({
+  selector: '#chart-4',
+  data: testdata.data2()
 })
