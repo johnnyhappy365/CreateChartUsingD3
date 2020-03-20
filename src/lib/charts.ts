@@ -231,6 +231,103 @@ export class ScatterChart extends BaseChart {
   }
 }
 
+export class StepChart extends BaseChart {
+  constructor(config: LineChartConfig) {
+    super()
+    this.config = {
+      width: 500,
+      height: 300,
+      margin: {
+        bottom: 20,
+        top: 20,
+        left: 20,
+        right: 20
+      },
+      showMidLine: true,
+      ...config
+    }
+    this.init()
+  }
+  init() {
+    this.initSvg()
+    this.initAxis()
+    this.addAxis()
+    this.initSeries()
+  }
+
+  initSeries() {
+    const { data } = this.config
+    const that = this
+
+    const stepData: DataItem[] = []
+    data.forEach((d: DataItem, i: number) => {
+      stepData.push(d)
+      if (i !== data.length - 1) {
+        stepData.push({
+          x: data[i + 1].x,
+          y: d.y
+        })
+      }
+    })
+
+    const line = d3
+      .line()
+      .x((d: any, i: number) => that.x(d.x))
+      .y((d: any, i: number) => that.y(d.y))
+
+    this.series = this.svg
+      .append('path')
+      .datum(stepData) // 10. Binds data to the line
+      .attr('class', 'line') // Assign a class for styling
+      .attr('d', line)
+      .attr('fill', 'none')
+      .attr('stroke', Colors.primary)
+      .attr('stroke-width', 3)
+  }
+
+  protected initAxis() {
+    const { data, width, height, margin } = this.config
+    const maxDomainValue = d3.max(data, (d: DataItem) => d.y as number)
+    this.x = d3
+      .scaleTime()
+      .domain([data[0].x as Date, data[data.length - 1].x as Date])
+      .range([margin.left, width - margin.right])
+
+    this.xAxis = d3
+      .axisBottom(this.x)
+      // @ts-ignore
+      .tickFormat((d: DataItem) => moment(d).format('M-D'))
+      .ticks(d3.timeDay.every(2))
+
+    this.y = d3
+      .scaleLinear()
+      .domain([0, maxDomainValue])
+      .range([height - margin.bottom, margin.top])
+    this.yAxis = d3.axisLeft(this.y)
+  }
+
+  // TODO: double check wether duplicate
+  private addAxis() {
+    const { height, margin } = this.config
+    this.xAxis = this.svg
+      .append('g')
+      .attr('transform', `translate(0, ${height - margin.bottom})`)
+      .call(this.xAxis)
+
+    this.xAxis.selectAll('text').attr('fill', Colors.axis)
+    this.xAxis.selectAll('path').attr('stroke', Colors.axis)
+    this.xAxis.selectAll('line').attr('stroke', Colors.axis)
+
+    this.yAxis = this.svg
+      .append('g')
+      .attr('transform', `translate(${margin.left}, 0)`)
+      .call(this.yAxis)
+
+    this.yAxis.selectAll('text').attr('fill', Colors.axis)
+    this.yAxis.selectAll('path').attr('stroke', Colors.axis)
+    this.yAxis.selectAll('line').attr('stroke', Colors.axis)
+  }
+}
 export class LineChart extends BaseChart {
   constructor(config: LineChartConfig) {
     super()
